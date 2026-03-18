@@ -1,0 +1,312 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 1300" font-family="'Courier New', monospace" font-size="13">
+  <defs>
+    <marker id="arrow-r" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#666"/>
+    </marker>
+    <marker id="arrow-l" markerWidth="8" markerHeight="6" refX="0" refY="3" orient="auto">
+      <path d="M8,0 L0,3 L8,6" fill="#666"/>
+    </marker>
+    <marker id="arrow-r-blue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#2563eb"/>
+    </marker>
+    <marker id="arrow-l-blue" markerWidth="8" markerHeight="6" refX="0" refY="3" orient="auto">
+      <path d="M8,0 L0,3 L8,6" fill="#2563eb"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="550" y="35" text-anchor="middle" font-size="20" font-weight="bold" fill="#1a1a1a">Bitcoin Transaction / TIFF Image 二重解釈構造</text>
+  <text x="550" y="58" text-anchor="middle" font-size="12" fill="#666">txid: b8cc570ef453508b6c6a1758bc591c276abdbe2b88881ae487ba4e858bd8d4be (66,739 bytes)</text>
+
+  <!-- Column Headers -->
+  <text x="160" y="95" text-anchor="middle" font-size="16" font-weight="bold" fill="#c2410c">Bitcoin Tx</text>
+  <text x="550" y="95" text-anchor="middle" font-size="16" font-weight="bold" fill="#475569">共有バイト列</text>
+  <text x="940" y="95" text-anchor="middle" font-size="16" font-weight="bold" fill="#2563eb">TIFF Image</text>
+
+  <!-- Offset column -->
+  <text x="20" y="95" font-size="11" fill="#94a3b8">Offset</text>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ROW 1: Version / TIFF Header  (y=110) -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <text x="20" y="135" font-size="11" fill="#94a3b8">0x0000</text>
+
+  <!-- Bitcoin box -->
+  <rect x="60" y="110" width="200" height="45" rx="4" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5"/>
+  <text x="160" y="130" text-anchor="middle" font-size="12" font-weight="bold" fill="#c2410c">Version</text>
+  <text x="160" y="147" text-anchor="middle" font-size="10" fill="#9a3412">0x2A004D4D (非標準)</text>
+
+  <!-- Shared bytes -->
+  <rect x="380" y="115" width="340" height="35" rx="4" fill="#f1f5f9" stroke="#64748b" stroke-width="1"/>
+  <text x="550" y="137" text-anchor="middle" font-size="13" font-weight="bold" fill="#334155">4D 4D 00 2A</text>
+
+  <!-- TIFF box -->
+  <rect x="840" y="110" width="200" height="45" rx="4" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="940" y="130" text-anchor="middle" font-size="12" font-weight="bold" fill="#2563eb">Header</text>
+  <text x="940" y="147" text-anchor="middle" font-size="10" fill="#1d4ed8">"MM" + Magic 42</text>
+
+  <!-- Arrows -->
+  <line x1="260" y1="132" x2="378" y2="132" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arrow-r)"/>
+  <line x1="840" y1="132" x2="722" y2="132" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arrow-l)"/>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ROW 2: SegWit / IFD Offset upper  (y=170) -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <text x="20" y="195" font-size="11" fill="#94a3b8">0x0004</text>
+
+  <rect x="60" y="170" width="200" height="45" rx="4" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5"/>
+  <text x="160" y="190" text-anchor="middle" font-size="12" font-weight="bold" fill="#c2410c">SegWit Marker</text>
+  <text x="160" y="207" text-anchor="middle" font-size="10" fill="#9a3412">marker=0x00 flag=0x01</text>
+
+  <rect x="380" y="175" width="340" height="35" rx="4" fill="#f1f5f9" stroke="#64748b" stroke-width="1"/>
+  <text x="550" y="197" text-anchor="middle" font-size="13" font-weight="bold" fill="#334155">00 01</text>
+
+  <rect x="840" y="170" width="200" height="45" rx="4" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="940" y="190" text-anchor="middle" font-size="12" font-weight="bold" fill="#2563eb">IFD Offset 上位</text>
+  <text x="940" y="207" text-anchor="middle" font-size="10" fill="#1d4ed8">0x0001XXXX の上位</text>
+
+  <line x1="260" y1="192" x2="378" y2="192" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arrow-r)"/>
+  <line x1="840" y1="192" x2="722" y2="192" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arrow-l)"/>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ROW 3: vin count / IFD Offset lower  (y=230) -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <text x="20" y="255" font-size="11" fill="#94a3b8">0x0006</text>
+
+  <rect x="60" y="230" width="200" height="45" rx="4" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5"/>
+  <text x="160" y="250" text-anchor="middle" font-size="12" font-weight="bold" fill="#c2410c">Vin Count</text>
+  <text x="160" y="267" text-anchor="middle" font-size="10" fill="#9a3412">4 入力 + txid先頭 0x00</text>
+
+  <rect x="380" y="235" width="340" height="35" rx="4" fill="#f1f5f9" stroke="#64748b" stroke-width="1"/>
+  <text x="550" y="257" text-anchor="middle" font-size="13" font-weight="bold" fill="#334155">04 00</text>
+
+  <rect x="840" y="230" width="200" height="45" rx="4" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="940" y="250" text-anchor="middle" font-size="12" font-weight="bold" fill="#2563eb">IFD Offset 下位</text>
+  <text x="940" y="267" text-anchor="middle" font-size="10" fill="#1d4ed8">→ 0x00010400 (66,560)</text>
+
+  <line x1="260" y1="252" x2="378" y2="252" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arrow-r)"/>
+  <line x1="840" y1="252" x2="722" y2="252" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arrow-l)"/>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ROW 4: vin data / ignored  (y=295) -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <text x="20" y="325" font-size="11" fill="#94a3b8">0x0007</text>
+
+  <rect x="60" y="295" width="200" height="65" rx="4" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5"/>
+  <text x="160" y="318" text-anchor="middle" font-size="12" font-weight="bold" fill="#c2410c">vin[0]~[3]</text>
+  <text x="160" y="335" text-anchor="middle" font-size="10" fill="#9a3412">4入力 × 41B = 164B</text>
+  <text x="160" y="350" text-anchor="middle" font-size="10" fill="#9a3412">同一txid, vout 0-3</text>
+
+  <rect x="380" y="300" width="340" height="55" rx="4" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="550" y="325" text-anchor="middle" font-size="11" fill="#94a3b8">txid × 4 + vout + sequence</text>
+  <text x="550" y="345" text-anchor="middle" font-size="11" fill="#94a3b8">(164 bytes)</text>
+
+  <rect x="840" y="295" width="200" height="65" rx="4" fill="#eff6ff" stroke="#93c5fd" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="940" y="325" text-anchor="middle" font-size="12" fill="#93c5fd">未参照領域</text>
+  <text x="940" y="345" text-anchor="middle" font-size="10" fill="#93c5fd">パーサーは無視</text>
+
+  <line x1="260" y1="327" x2="378" y2="327" stroke="#c2410c" stroke-width="1" stroke-dasharray="3,3" marker-end="url(#arrow-r)"/>
+  <line x1="840" y1="327" x2="722" y2="327" stroke="#93c5fd" stroke-width="1" stroke-dasharray="3,3" marker-end="url(#arrow-l)"/>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ROW 5: vout / ignored  (y=380) -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <text x="20" y="405" font-size="11" fill="#94a3b8">0x00AB</text>
+
+  <rect x="60" y="380" width="200" height="50" rx="4" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5"/>
+  <text x="160" y="400" text-anchor="middle" font-size="12" font-weight="bold" fill="#c2410c">vout[0]</text>
+  <text x="160" y="417" text-anchor="middle" font-size="10" fill="#9a3412">358 sats, anchor output</text>
+
+  <rect x="380" y="385" width="340" height="40" rx="4" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="550" y="409" text-anchor="middle" font-size="11" fill="#94a3b8">01 6601...04 51024e73</text>
+
+  <rect x="840" y="380" width="200" height="50" rx="4" fill="#eff6ff" stroke="#93c5fd" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="940" y="409" text-anchor="middle" font-size="12" fill="#93c5fd">未参照領域</text>
+
+  <line x1="260" y1="405" x2="378" y2="405" stroke="#c2410c" stroke-width="1" stroke-dasharray="3,3" marker-end="url(#arrow-r)"/>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ROW 6: Witness start / Resolution  (y=450) -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <text x="20" y="478" font-size="11" fill="#94a3b8">0x00B9</text>
+
+  <rect x="60" y="450" width="200" height="55" rx="4" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5"/>
+  <text x="160" y="470" text-anchor="middle" font-size="12" font-weight="bold" fill="#c2410c">Witness 開始</text>
+  <text x="160" y="487" text-anchor="middle" font-size="10" fill="#9a3412">vin[0] item[0]: 17B</text>
+  <text x="160" y="500" text-anchor="middle" font-size="10" fill="#9a3412">00..01..00..01..01</text>
+
+  <rect x="380" y="455" width="340" height="45" rx="4" fill="#f1f5f9" stroke="#64748b" stroke-width="1"/>
+  <text x="550" y="475" text-anchor="middle" font-size="11" fill="#334155">00000001 00000001</text>
+  <text x="550" y="492" text-anchor="middle" font-size="11" fill="#334155">00000001 00000001</text>
+
+  <rect x="840" y="450" width="200" height="55" rx="4" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="940" y="470" text-anchor="middle" font-size="12" font-weight="bold" fill="#2563eb">Resolution</text>
+  <text x="940" y="487" text-anchor="middle" font-size="10" fill="#1d4ed8">XRes = 1/1</text>
+  <text x="940" y="500" text-anchor="middle" font-size="10" fill="#1d4ed8">YRes = 1/1</text>
+
+  <line x1="260" y1="477" x2="378" y2="477" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arrow-r)"/>
+  <line x1="840" y1="477" x2="722" y2="477" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arrow-l)"/>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ROW 7: Image strips / Witness items (MAIN)  (y=525) -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <text x="20" y="570" font-size="11" fill="#94a3b8">0x00CD</text>
+
+  <rect x="60" y="525" width="200" height="200" rx="4" fill="#fff7ed" stroke="#c2410c" stroke-width="2"/>
+  <text x="160" y="555" text-anchor="middle" font-size="13" font-weight="bold" fill="#c2410c">Witness Items</text>
+  <text x="160" y="578" text-anchor="middle" font-size="10" fill="#9a3412">vin[0]: 66 items</text>
+  <text x="160" y="595" text-anchor="middle" font-size="10" fill="#9a3412">vin[1]: 66 items</text>
+  <text x="160" y="612" text-anchor="middle" font-size="10" fill="#9a3412">vin[2]: 66 items</text>
+  <line x1="80" y1="625" x2="240" y2="625" stroke="#c2410c" stroke-width="0.5" stroke-dasharray="3,3"/>
+  <text x="160" y="645" text-anchor="middle" font-size="10" fill="#9a3412">各 item が 1行分の</text>
+  <text x="160" y="662" text-anchor="middle" font-size="10" fill="#9a3412">zlib圧縮データを格納</text>
+  <text x="160" y="685" text-anchor="middle" font-size="10" fill="#9a3412">~44KB (192 items)</text>
+
+  <rect x="380" y="530" width="340" height="190" rx="4" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="550" y="555" text-anchor="middle" font-size="12" font-weight="bold" fill="#16a34a">78 DA ... (zlib) × 130</text>
+  <text x="550" y="580" text-anchor="middle" font-size="11" fill="#166534">Strip  0: 0x00CD  117B</text>
+  <text x="550" y="598" text-anchor="middle" font-size="11" fill="#166534">Strip  1: 0x0143  117B</text>
+  <text x="550" y="616" text-anchor="middle" font-size="11" fill="#166534">Strip  2: 0x01B9  155B</text>
+  <text x="550" y="634" text-anchor="middle" font-size="11" fill="#94a3b8">:</text>
+  <text x="550" y="652" text-anchor="middle" font-size="11" fill="#94a3b8">:</text>
+  <text x="550" y="670" text-anchor="middle" font-size="11" fill="#166534">Strip129: 0xADF3  298B</text>
+  <text x="550" y="700" text-anchor="middle" font-size="11" fill="#166534">合計 39,551 bytes</text>
+
+  <rect x="840" y="525" width="200" height="200" rx="4" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <text x="940" y="555" text-anchor="middle" font-size="13" font-weight="bold" fill="#2563eb">画像ストリップ</text>
+  <text x="940" y="580" text-anchor="middle" font-size="10" fill="#1d4ed8">130行 × 130px</text>
+  <text x="940" y="597" text-anchor="middle" font-size="10" fill="#1d4ed8">RGB (3ch × 8bit)</text>
+  <text x="940" y="614" text-anchor="middle" font-size="10" fill="#1d4ed8">Compression: deflate</text>
+  <line x1="860" y1="630" x2="1020" y2="630" stroke="#2563eb" stroke-width="0.5" stroke-dasharray="3,3"/>
+  <text x="940" y="655" text-anchor="middle" font-size="10" fill="#1d4ed8">各ストリップが</text>
+  <text x="940" y="672" text-anchor="middle" font-size="10" fill="#1d4ed8">witness pushと</text>
+  <text x="940" y="689" text-anchor="middle" font-size="10" fill="#1d4ed8">1対1対応</text>
+
+  <line x1="260" y1="625" x2="378" y2="625" stroke="#16a34a" stroke-width="2" marker-end="url(#arrow-r)"/>
+  <line x1="840" y1="625" x2="722" y2="625" stroke="#16a34a" stroke-width="2" marker-end="url(#arrow-l)"/>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ROW 8: Metadata arrays  (y=745) -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <text x="20" y="775" font-size="11" fill="#94a3b8">0xAF1E</text>
+
+  <rect x="60" y="745" width="200" height="55" rx="4" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5"/>
+  <text x="160" y="768" text-anchor="middle" font-size="12" font-weight="bold" fill="#c2410c">Witness (続き)</text>
+  <text x="160" y="788" text-anchor="middle" font-size="10" fill="#9a3412">vin[2]末尾 + vin[3]前半</text>
+
+  <rect x="380" y="750" width="340" height="45" rx="4" fill="#f1f5f9" stroke="#64748b" stroke-width="1"/>
+  <text x="550" y="770" text-anchor="middle" font-size="11" fill="#334155">StripOffsets (LONG×130)</text>
+  <text x="550" y="788" text-anchor="middle" font-size="11" fill="#334155">StripByteCounts (LONG×130)</text>
+
+  <rect x="840" y="745" width="200" height="55" rx="4" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="940" y="768" text-anchor="middle" font-size="12" font-weight="bold" fill="#2563eb">メタデータ配列</text>
+  <text x="940" y="788" text-anchor="middle" font-size="10" fill="#1d4ed8">各ストリップの位置とサイズ</text>
+
+  <line x1="260" y1="772" x2="378" y2="772" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arrow-r)"/>
+  <line x1="840" y1="772" x2="722" y2="772" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arrow-l)"/>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ROW 9: Text + troll padding  (y=820) -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <text x="20" y="855" font-size="11" fill="#94a3b8">0xB341</text>
+
+  <rect x="60" y="820" width="200" height="75" rx="4" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5"/>
+  <text x="160" y="845" text-anchor="middle" font-size="12" font-weight="bold" fill="#c2410c">vin[3] Witness</text>
+  <text x="160" y="865" text-anchor="middle" font-size="10" fill="#9a3412">テキスト 4,390B</text>
+  <text x="160" y="882" text-anchor="middle" font-size="10" fill="#9a3412">"trollolloll..." pad</text>
+
+  <rect x="380" y="825" width="340" height="65" rx="4" fill="#fefce8" stroke="#ca8a04" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="550" y="850" text-anchor="middle" font-size="11" fill="#a16207">"This is a valid TIFF..."</text>
+  <text x="550" y="870" text-anchor="middle" font-size="11" fill="#a16207">"trollollollolloll..."</text>
+  <text x="550" y="885" text-anchor="middle" font-size="10" fill="#ca8a04">~15KB パディング領域</text>
+
+  <rect x="840" y="820" width="200" height="75" rx="4" fill="#eff6ff" stroke="#93c5fd" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="940" y="852" text-anchor="middle" font-size="12" fill="#93c5fd">未参照領域</text>
+  <text x="940" y="875" text-anchor="middle" font-size="10" fill="#93c5fd">パーサーは無視</text>
+
+  <line x1="260" y1="857" x2="378" y2="857" stroke="#c2410c" stroke-width="1" stroke-dasharray="3,3" marker-end="url(#arrow-r)"/>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ROW 10: IFD  (y=915) -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <text x="20" y="955" font-size="11" fill="#94a3b8">0x10400</text>
+
+  <rect x="60" y="915" width="200" height="100" rx="4" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5"/>
+  <text x="160" y="940" text-anchor="middle" font-size="12" font-weight="bold" fill="#c2410c">vin[3]</text>
+  <text x="160" y="957" text-anchor="middle" font-size="12" font-weight="bold" fill="#c2410c">witnessScript</text>
+  <text x="160" y="978" text-anchor="middle" font-size="10" fill="#9a3412">812B のスクリプト</text>
+  <text x="160" y="995" text-anchor="middle" font-size="10" fill="#9a3412">この内部にIFDが存在</text>
+
+  <rect x="380" y="920" width="340" height="90" rx="4" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+  <text x="550" y="945" text-anchor="middle" font-size="11" fill="#334155">000E (14 entries)</text>
+  <text x="550" y="963" text-anchor="middle" font-size="11" fill="#334155">0100: Width=130</text>
+  <text x="550" y="978" text-anchor="middle" font-size="11" fill="#334155">0101: Height=130</text>
+  <text x="550" y="993" text-anchor="middle" font-size="11" fill="#334155">0103: Compression=deflate</text>
+  <text x="550" y="1005" text-anchor="middle" font-size="10" fill="#94a3b8">... (14 tags × 12B = 174B)</text>
+
+  <rect x="840" y="915" width="200" height="100" rx="4" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <text x="940" y="940" text-anchor="middle" font-size="13" font-weight="bold" fill="#2563eb">IFD</text>
+  <text x="940" y="960" text-anchor="middle" font-size="10" fill="#1d4ed8">Image File Directory</text>
+  <text x="940" y="978" text-anchor="middle" font-size="10" fill="#1d4ed8">14エントリ</text>
+  <text x="940" y="996" text-anchor="middle" font-size="10" fill="#1d4ed8">130×130 RGB deflate</text>
+
+  <line x1="260" y1="965" x2="378" y2="965" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arrow-r)"/>
+  <line x1="840" y1="965" x2="722" y2="965" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arrow-l)"/>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ROW 11: Locktime  (y=1035) -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <text x="20" y="1060" font-size="11" fill="#94a3b8">0x104AF</text>
+
+  <rect x="60" y="1035" width="200" height="45" rx="4" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5"/>
+  <text x="160" y="1055" text-anchor="middle" font-size="12" font-weight="bold" fill="#c2410c">Locktime</text>
+  <text x="160" y="1072" text-anchor="middle" font-size="10" fill="#9a3412">0 (即時有効)</text>
+
+  <rect x="380" y="1040" width="340" height="35" rx="4" fill="#f1f5f9" stroke="#64748b" stroke-width="1"/>
+  <text x="550" y="1062" text-anchor="middle" font-size="13" font-weight="bold" fill="#334155">00 00 00 00</text>
+
+  <rect x="840" y="1035" width="200" height="45" rx="4" fill="#eff6ff" stroke="#93c5fd" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="940" y="1062" text-anchor="middle" font-size="12" fill="#93c5fd">末尾 (無視)</text>
+
+  <line x1="260" y1="1057" x2="378" y2="1057" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arrow-r)"/>
+
+  <!-- EOF -->
+  <text x="20" y="1105" font-size="11" fill="#94a3b8">0x104B3</text>
+  <text x="550" y="1105" text-anchor="middle" font-size="13" font-weight="bold" fill="#64748b">EOF (66,739 bytes)</text>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- TIFF IFD reference arrows (right side) -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+
+  <!-- IFD offset arrow from header to IFD -->
+  <path d="M 1045,132 Q 1080,132 1080,550 Q 1080,960 1045,960" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow-l-blue)"/>
+  <text x="1070" y="550" font-size="10" fill="#2563eb" transform="rotate(90, 1070, 550)">IFD Offset → 0x10400</text>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- Legend -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <rect x="60" y="1140" width="980" height="130" rx="8" fill="#fafafa" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="550" y="1165" text-anchor="middle" font-size="14" font-weight="bold" fill="#334155">凡例</text>
+
+  <!-- Legend items -->
+  <rect x="90" y="1180" width="30" height="16" rx="3" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5"/>
+  <line x1="130" y1="1188" x2="170" y2="1188" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="180" y="1192" font-size="11" fill="#334155">Bitcoin Tx として意味を持つ領域</text>
+
+  <rect x="90" y="1210" width="30" height="16" rx="3" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+  <line x1="130" y1="1218" x2="170" y2="1218" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="180" y="1222" font-size="11" fill="#334155">TIFF Image として意味を持つ領域</text>
+
+  <rect x="90" y="1240" width="30" height="16" rx="3" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <line x1="130" y1="1248" x2="170" y2="1248" stroke="#16a34a" stroke-width="2"/>
+  <text x="180" y="1252" font-size="11" fill="#334155">両方の解釈で核心的な役割を持つ領域 (witness item = 画像ストリップ)</text>
+
+  <rect x="600" y="1180" width="30" height="16" rx="3" fill="#fefce8" stroke="#ca8a04" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="640" y="1192" font-size="11" fill="#334155">どちらの解釈でも無視される領域 (テキスト/パディング)</text>
+
+  <rect x="600" y="1210" width="30" height="16" rx="3" fill="#fff" stroke="#93c5fd" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="640" y="1222" font-size="11" fill="#334155">片方の解釈で無視される領域</text>
+
+  <!-- Key insight box -->
+  <text x="600" y="1252" font-size="11" fill="#334155">SegWit 00 01 = IFD Offset上位, vin count 04 = IFD Offset下位</text>
+</svg>
