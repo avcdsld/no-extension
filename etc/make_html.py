@@ -10,21 +10,15 @@ if not os.path.exists(font_path):
 with open(font_path, "rb") as f:
     b64 = base64.b64encode(f.read()).decode()
 
-size_kb = os.path.getsize(font_path) / 1024
-print(f"フォント: {size_kb:.1f} KB")
+CHUNK = 400
+chunks = [b64[i:i+CHUNK] for i in range(0, len(b64), CHUNK)]
+font_tags = "\n".join(f"<i id=f{i}>{c}</i>" for i, c in enumerate(chunks))
 
 html = f"""<!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-@font-face {{
-  font-family: 'OCRB';
-  src: url('data:font/woff2;base64,{b64}') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-}}
 *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
 html, body {{ width: 100%; height: 100%; }}
 body {{
@@ -33,6 +27,7 @@ body {{
   align-items: center;
   justify-content: center;
   min-height: 100vh;
+  font-size: 0;
 }}
 .stmt {{
   font-family: 'OCRB', 'Courier New', monospace;
@@ -48,11 +43,13 @@ blink {{ animation: b 1s step-end infinite; }}
 </style>
 </head>
 <body>
-  <div class="stmt">
-    This is<br>
-    <blink>not</blink><br>
-    a transaction.
-  </div>
+{font_tags}
+<div class="stmt">
+  This is<br>
+  <blink>not</blink><br>
+  a transaction.
+</div>
+<script>var b='';for(var i=0;document.getElementById('f'+i);i++)b+=document.getElementById('f'+i).textContent.replace(/[^A-Za-z0-9+/=]/g,'');var f=new FontFace('OCRB','url(data:font/woff2;base64,'+b+')');document.fonts.add(f);f.load().then(function(){{document.querySelector('.stmt').style.fontFamily="'OCRB',monospace"}})</script>
 </body>
 </html>"""
 
@@ -60,5 +57,6 @@ out = "output.html"
 with open(out, "w") as f:
     f.write(html)
 
-out_kb = os.path.getsize(out) / 1024
-print(f"生成: {out} ({out_kb:.1f} KB)")
+size_kb = os.path.getsize(font_path) / 1024
+print(f"font: {size_kb:.1f} KB ({len(chunks)} chunks)")
+print(f"output: {out} ({os.path.getsize(out)} bytes)")

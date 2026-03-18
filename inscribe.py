@@ -104,6 +104,18 @@ def chunk_html(data, chunk_size=493):
     style_start = data.find(b'<style>')
     style_end = data.find(b'</style>')
 
+    nosplit = []
+    for m in __import__('re').finditer(rb'<i id=f\d+>[^<]*</i>', data):
+        nosplit.append((m.start(), m.end()))
+    for m in __import__('re').finditer(rb'<script>[^<]*</script>', data):
+        nosplit.append((m.start(), m.end()))
+
+    def in_nosplit(p):
+        for s, e in nosplit:
+            if s < p < e:
+                return True
+        return False
+
     chunks = []
     pos = 0
     comment_type = None
@@ -115,6 +127,8 @@ def chunk_html(data, chunk_size=493):
             best = -1
             for sep in [b'>', b'}\n', b';\n']:
                 p = data.rfind(sep, pos, end)
+                while p > pos and in_nosplit(p + len(sep)):
+                    p = data.rfind(sep, pos, p - 1)
                 if p > pos and p + len(sep) > best:
                     best = p + len(sep)
             if best > pos:
