@@ -10,5 +10,5 @@ with zipfile.ZipFile(OUTPUT_ZIP, "w", compression=zipfile.ZIP_STORED) as zf:
         info.date_time = (1980, 1, 1, 0, 0, 0)  # null
         zf.writestr(info, "")
 
-print(f"生成: {OUTPUT_ZIP}")
-print(f"確認: unzip -l {OUTPUT_ZIP}")
+print(f"output: {OUTPUT_ZIP}")
+print(f"verify: unzip -l {OUTPUT_ZIP}")

@@ -71,7 +71,7 @@ def main():
 
     pdf = b''.join(parts)
     OUTPUT.write_bytes(pdf)
-    print(f"生成: {OUTPUT} ({len(pdf)} bytes)")
+    print(f"output: {OUTPUT} ({len(pdf)} bytes)")
 
 if __name__ == "__main__":
     main()

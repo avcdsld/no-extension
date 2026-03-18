@@ -1,10 +1,9 @@
 import base64, os
 
-# サブセット済みフォントを直接使う
 font_path = "OCRB_subset.woff2"
 
 if not os.path.exists(font_path):
-    print(f"ERROR: {font_path} が見つかりません")
+    print(f"ERROR: {font_path} not found")
     exit(1)
 
 with open(font_path, "rb") as f:
