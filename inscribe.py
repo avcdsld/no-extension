@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import sys, struct, zlib, hashlib, json, os, subprocess, argparse, time
+import sys, struct, zlib, hashlib, json, os, subprocess, argparse, time, getpass
 
 try:
     from PIL import Image
@@ -10,6 +10,14 @@ try:
     import ecdsa
 except ImportError:
     sys.exit("pip install ecdsa")
+
+# Optional: for seed phrase support
+try:
+    from bip_utils import (Bip39SeedGenerator, Bip84, Bip84Coins,
+                           Bip39MnemonicValidator, Bip39Languages, Bip44Changes)
+    HAS_BIP_UTILS = True
+except ImportError:
+    HAS_BIP_UTILS = False
 
 def sha256(d): return hashlib.sha256(d).digest()
 def hash256(d): return sha256(sha256(d))
@@ -60,6 +68,34 @@ def keygen():
     sk=ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1); vk=sk.get_verifying_key()
     x,y=vk.pubkey.point.x(),vk.pubkey.point.y()
     return sk.to_string(),(b'\x02' if y%2==0 else b'\x03')+x.to_bytes(32,'big')
+
+def keygen_from_seed(mnemonic, network="mainnet", account=0, index=0):
+    """Derive keypair from BIP39 seed phrase using BIP84 (native segwit) path."""
+    if not HAS_BIP_UTILS:
+        sys.exit("pip install bip_utils  (required for --seed)")
+
+    # Validate mnemonic
+    mnemonic = mnemonic.strip()
+    if not Bip39MnemonicValidator(Bip39Languages.ENGLISH).IsValid(mnemonic):
+        sys.exit("Invalid seed phrase")
+
+    # Generate seed from mnemonic
+    seed = Bip39SeedGenerator(mnemonic).Generate()
+
+    # Derive using BIP84 path: m/84'/coin'/account'/0/index
+    # coin: 0 for mainnet, 1 for testnet/signet/regtest
+    coin = Bip84Coins.BITCOIN if network == "mainnet" else Bip84Coins.BITCOIN_TESTNET
+    bip84 = Bip84.FromSeed(seed, coin)
+    account_key = bip84.Purpose().Coin().Account(account)
+    addr_key = account_key.Change(Bip44Changes.CHAIN_EXT).AddressIndex(index)
+
+    # Extract raw private key (32 bytes)
+    privkey = addr_key.PrivateKey().Raw().ToBytes()
+
+    # Get compressed public key
+    pubkey = addr_key.PublicKey().RawCompressed().ToBytes()
+
+    return privkey, pubkey
 
 def sign71(privkey, sighash):
     sk=ecdsa.SigningKey.from_string(privkey,curve=ecdsa.SECP256k1)
@@ -934,7 +970,17 @@ def cmd_prepare(args):
     print(f"=== prepare ({fmt}) ===")
     print(f"  input: {input_path}")
 
-    privkey, pubkey = keygen()
+    if args.seed:
+        # Prompt for seed phrase with hidden input
+        print(f"  key source: BIP39 seed phrase (BIP84 derivation)")
+        mnemonic = getpass.getpass("  Enter seed phrase: ")
+        account = getattr(args, 'account', 0) or 0
+        index = getattr(args, 'index', 0) or 0
+        privkey, pubkey = keygen_from_seed(mnemonic, args.network, account, index)
+        print(f"  derivation: m/84'/{0 if args.network == 'mainnet' else 1}'/{account}'/0/{index}")
+    else:
+        print(f"  key source: random generation")
+        privkey, pubkey = keygen()
 
     if fmt == 'tiff':
         prep = _prepare_tiff(input_path, pubkey)
@@ -976,6 +1022,102 @@ def cmd_prepare(args):
         json.dump(state, f, indent=2)
     print(f"\n  state saved: {sf}")
     print(f"\n  next: python3 inscribe.py fund {sf}")
+
+def _get_wscripts_and_addrs(state):
+    """Helper to get witness scripts and addresses from state."""
+    fmt = state['format']
+    net = state['network']
+    pubkey = bytes.fromhex(state['pubkey_hex'])
+    vc = state['vin_count']
+    grind = {int(k): v for k, v in state.get('grind_target', {}).items()}
+
+    if fmt == 'tiff':
+        strips, w, h = prepare_strips(state['input_path'], state['width'], state['height'])
+        target_byte = grind.get(0, 0x00)
+        layout = None
+        for try_vc in range(vc, vc + 4):
+            try:
+                layout = TiffLayout(strips, pubkey, try_vc, target_byte, w, h)
+                if try_vc != vc:
+                    vc = try_vc
+                    state['vin_count'] = vc
+                break
+            except ValueError:
+                continue
+        if layout is None:
+            sys.exit("layout failed: reduce image size")
+        wscripts = layout.get_witness_scripts()
+    else:
+        if fmt == 'html':
+            with open(state['input_path'], 'rb') as f: data = f.read()
+            data_per_vin = chunk_html(data)
+        elif fmt == 'pdf':
+            data_per_vin = _pdf_data_per_vin(state['input_path'])
+        elif fmt == 'zip':
+            entries = _load_zip_entries(state['input_path'])
+            data_per_vin, _ = build_zip_data(entries)
+        wscripts = [witness_script(pubkey, items) for items in data_per_vin]
+
+    addrs = [p2wsh_addr(ws, net) for ws in wscripts]
+    return wscripts, addrs, vc
+
+
+def cmd_fund_external(args):
+    """Fund using external wallet (Sparrow, Electrum, etc.)"""
+    with open(args.state_file) as f:
+        state = json.load(f)
+
+    fmt = state['format']
+    net = state['network']
+    vc = state['vin_count']
+    vp = state['value_per_vin']
+    grind = {int(k): v for k, v in state.get('grind_target', {}).items()}
+
+    print(f"=== fund-external ({fmt}) ===")
+
+    if fmt == 'tiff' and grind:
+        print(f"\n  WARNING: TIFF format requires txid grinding.")
+        print(f"  External wallet cannot control txid bytes.")
+        print(f"  Recommended: use HTML, PDF, or ZIP format instead.\n")
+
+    wscripts, addrs, vc = _get_wscripts_and_addrs(state)
+    state['vin_count'] = vc
+
+    total_sats = vp * vc
+    print(f"\n  Network: {net}")
+    print(f"  Format: {fmt}")
+    print(f"  Number of inputs (vins): {vc}")
+    print(f"  Amount per address: {vp:,} sats ({vp/1e8:.8f} BTC)")
+    print(f"  Total required: {total_sats:,} sats ({total_sats/1e8:.8f} BTC)")
+
+    print(f"\n  === FUNDING ADDRESSES ===")
+    print(f"  Send EXACTLY {vp:,} sats to EACH address below:\n")
+    for i, a in enumerate(addrs):
+        print(f"    [{i}] {a}")
+        print(f"        Amount: {vp:,} sats ({vp/1e8:.8f} BTC)\n")
+
+    print(f"  === IMPORTANT ===")
+    print(f"  1. Send to ALL {vc} addresses in a SINGLE transaction")
+    print(f"  2. Each output must be EXACTLY {vp:,} sats")
+    print(f"  3. Use output index 0 for address[0], index 1 for address[1], etc.")
+
+    if args.txid:
+        txid = args.txid.strip()
+        if len(txid) != 64:
+            sys.exit(f"Invalid txid length: {len(txid)} (expected 64)")
+        print(f"\n  Funding txid set: {txid}")
+        state['funding_txid'] = txid
+        state['funding_values'] = [vp] * vc
+        with open(args.state_file, 'w') as f:
+            json.dump(state, f, indent=2)
+        print(f"  State updated: {args.state_file}")
+        print(f"\n  next: python3 inscribe.py build {args.state_file}")
+    else:
+        print(f"\n  After funding, run:")
+        print(f"    python3 inscribe.py fund-external {args.state_file} --txid <FUNDING_TXID>")
+
+    return addrs
+
 
 def cmd_fund(args):
     with open(args.state_file) as f:
@@ -1123,10 +1265,36 @@ def cmd_broadcast(args):
     fmt = state['format']
     net = state['network']
     wallet = state.get('wallet')
+    raw_hex = state['raw_tx_hex']
 
     print(f"=== broadcast ({fmt}) ===")
     print(f"  network: {net}")
-    print(f"  tx size: {len(state['raw_tx_hex'])//2:,} bytes")
+    print(f"  tx size: {len(raw_hex)//2:,} bytes")
+
+    # Calculate txid from raw tx
+    raw_bytes = bytes.fromhex(raw_hex)
+    # For SegWit tx, need to strip marker/flag and witness for txid
+    # version(4) + marker(1) + flag(1) + ...
+    version = raw_bytes[:4]
+    # Find witness data and remove it for txid calculation
+    # Simplified: just hash the raw for display, actual txid calculated after broadcast
+    txid_preview = hash256(raw_bytes)[::-1].hex()
+
+    if args.raw:
+        print(f"\n  === RAW TRANSACTION HEX ===")
+        print(f"  (Copy and broadcast manually at mempool.space/tx/push)\n")
+        print(raw_hex)
+        print(f"\n  === BROADCAST URLS ===")
+        if net == 'mainnet':
+            print(f"  https://mempool.space/tx/push")
+            print(f"  https://blockstream.info/tx/push")
+        elif net == 'testnet':
+            print(f"  https://mempool.space/testnet/tx/push")
+        elif net == 'signet':
+            print(f"  https://mempool.space/signet/tx/push")
+        print(f"\n  After broadcast, verify the file by downloading:")
+        print(f"    curl https://mempool.space/api/tx/<TXID>/raw > downloaded.{fmt}")
+        return
 
     if net == 'mainnet':
         print(f"\n  *** sending to mainnet. this cannot be undone. ***")
@@ -1136,7 +1304,7 @@ def cmd_broadcast(args):
             return
 
     try:
-        txid = cli(["sendrawtransaction", state['raw_tx_hex']], net, wallet)
+        txid = cli(["sendrawtransaction", raw_hex], net, wallet)
         print(f"  broadcast ok!")
         print(f"  TXID: {txid}")
         if net == "regtest":
@@ -1156,9 +1324,16 @@ def main():
     sp.add_argument('--network', default='regtest')
     sp.add_argument('--wallet', help='bitcoin-cli -rpcwallet name')
     sp.add_argument('-o', '--output', help='state file name')
+    sp.add_argument('--seed', action='store_true', help='derive key from BIP39 seed phrase (hidden input)')
+    sp.add_argument('--account', type=int, default=0, help='BIP84 account index (default: 0)')
+    sp.add_argument('--index', type=int, default=0, help='BIP84 address index (default: 0)')
 
-    sf = sub.add_parser('fund', help='fund P2WSH + grind txid')
+    sf = sub.add_parser('fund', help='fund P2WSH + grind txid (requires bitcoin-cli)')
     sf.add_argument('state_file')
+
+    sfe = sub.add_parser('fund-external', help='fund using external wallet (Sparrow, Electrum, etc.)')
+    sfe.add_argument('state_file')
+    sfe.add_argument('--txid', help='funding transaction ID (after you send funds)')
 
     sb = sub.add_parser('build', help='build and sign tx')
     sb.add_argument('state_file')
@@ -1166,10 +1341,12 @@ def main():
 
     sc = sub.add_parser('broadcast', help='broadcast')
     sc.add_argument('state_file')
+    sc.add_argument('--raw', action='store_true', help='output raw hex for manual broadcast')
 
     args = p.parse_args()
     if args.cmd == 'prepare': cmd_prepare(args)
     elif args.cmd == 'fund': cmd_fund(args)
+    elif args.cmd == 'fund-external': cmd_fund_external(args)
     elif args.cmd == 'build': cmd_build(args)
     elif args.cmd == 'broadcast': cmd_broadcast(args)
     else: p.print_help()
