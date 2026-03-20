@@ -200,9 +200,9 @@ def chunk_html(data, chunk_size=493):
         vins.append(chunks[i:i+MAX_ITEMS_PER_VIN])
     return vins
 
-def build_tx(version, data_per_vin, pubkey, privkey, txid_hex, values):
+def build_tx(version, data_per_vin, pubkey, privkey, txid_hex, values, vout_start=0):
     vc=len(data_per_vin); ti=bytes.fromhex(txid_hex)[::-1]
-    prevs=b''.join(ti+struct.pack('<I',i) for i in range(vc))
+    prevs=b''.join(ti+struct.pack('<I',i+vout_start) for i in range(vc))
     seqs=struct.pack('<I',SEQUENCE)*vc
     oser=struct.pack('<Q',0)+bytes([len(OP_RETURN_SPK)])+OP_RETURN_SPK
     vle=struct.pack('<I',int.from_bytes(version,'little'))
@@ -210,10 +210,10 @@ def build_tx(version, data_per_vin, pubkey, privkey, txid_hex, values):
     for vi in range(vc):
         ws=witness_script(pubkey,data_per_vin[vi]); wss.append(ws)
         sc=varint(len(ws))+ws
-        sh=bip143(vle,prevs,seqs,ti+struct.pack('<I',vi),sc,values[vi],SEQUENCE,oser,LOCKTIME)
+        sh=bip143(vle,prevs,seqs,ti+struct.pack('<I',vi+vout_start),sc,values[vi],SEQUENCE,oser,LOCKTIME)
         sigs.append(sign71(privkey,sh))
     tx=bytearray(version)+b'\x00\x01'+bytes([vc])
-    for i in range(vc): tx+=ti+struct.pack('<I',i)+b'\x00'+struct.pack('<I',SEQUENCE)
+    for i in range(vc): tx+=ti+struct.pack('<I',i+vout_start)+b'\x00'+struct.pack('<I',SEQUENCE)
     tx+=b'\x01'+struct.pack('<Q',0)+bytes([len(OP_RETURN_SPK)])+OP_RETURN_SPK
     for vi in range(vc):
         items=data_per_vin[vi]; tx+=varint(len(items)+2)
@@ -755,8 +755,9 @@ def _build_html(state):
     data_per_vin = chunk_html(data)
     privkey = bytes.fromhex(state['privkey_hex'])
     pubkey = bytes.fromhex(state['pubkey_hex'])
+    vout_start = state.get('funding_vout_start', 0)
     return build_tx(STD_VERSION, data_per_vin, pubkey, privkey,
-                    state['funding_txid'], state['funding_values'])
+                    state['funding_txid'], state['funding_values'], vout_start)
 
 def _adjust_pdf_offsets(raw_pdf, base_offset):
     return _adjust_pdf_offsets_with_varints(raw_pdf, base_offset, len(raw_pdf)+1, [0])
@@ -950,16 +951,18 @@ def _build_pdf(state):
     data_per_vin = _pdf_data_per_vin(state['input_path'])
     privkey = bytes.fromhex(state['privkey_hex'])
     pubkey = bytes.fromhex(state['pubkey_hex'])
+    vout_start = state.get('funding_vout_start', 0)
     return build_tx(STD_VERSION, data_per_vin, pubkey, privkey,
-                    state['funding_txid'], state['funding_values'])
+                    state['funding_txid'], state['funding_values'], vout_start)
 
 def _build_zip(state):
     entries = _load_zip_entries(state['input_path'])
     data_per_vin, vc = build_zip_data(entries)
     privkey = bytes.fromhex(state['privkey_hex'])
     pubkey = bytes.fromhex(state['pubkey_hex'])
+    vout_start = state.get('funding_vout_start', 0)
     return build_tx(STD_VERSION, data_per_vin, pubkey, privkey,
-                    state['funding_txid'], state['funding_values'])
+                    state['funding_txid'], state['funding_values'], vout_start)
 
 def cmd_prepare(args):
     fmt = args.format
@@ -1105,8 +1108,11 @@ def cmd_fund_external(args):
         txid = args.txid.strip()
         if len(txid) != 64:
             sys.exit(f"Invalid txid length: {len(txid)} (expected 64)")
+        vout_start = getattr(args, 'vout', 0) or 0
         print(f"\n  Funding txid set: {txid}")
+        print(f"  Funding vout start: {vout_start}")
         state['funding_txid'] = txid
+        state['funding_vout_start'] = vout_start
         state['funding_values'] = [vp] * vc
         with open(args.state_file, 'w') as f:
             json.dump(state, f, indent=2)
@@ -1334,6 +1340,7 @@ def main():
     sfe = sub.add_parser('fund-external', help='fund using external wallet (Sparrow, Electrum, etc.)')
     sfe.add_argument('state_file')
     sfe.add_argument('--txid', help='funding transaction ID (after you send funds)')
+    sfe.add_argument('--vout', type=int, default=0, help='starting output index in funding tx (default: 0)')
 
     sb = sub.add_parser('build', help='build and sign tx')
     sb.add_argument('state_file')
