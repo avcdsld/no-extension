@@ -368,8 +368,7 @@ footer a { color: #aaa; }
 @media (max-width: 600px) {
   section { padding: 5rem 1rem 2rem; }
   nav { padding: 0.8rem 1rem; }
-  nav ul { gap: 0.4rem; }
-  nav a { font-size: 12px; padding: 0.3rem 0.4rem; }
+  nav ul { display: none; }
   .logo { font-size: 14px; }
   h2 { font-size: 1.2rem; }
   .tagline { font-size: 1rem; }
@@ -384,8 +383,6 @@ footer a { color: #aaa; }
   .tx-row a { font-size: 0.75rem; word-break: break-all; }
 }
 @media (max-width: 400px) {
-  nav ul { gap: 0.2rem; }
-  nav a { font-size: 10px; padding: 0.2rem 0.3rem; }
   .logo { font-size: 13px; }
   section { padding: 4.5rem 0.8rem 1.5rem; }
   .download-cmd code { font-size: 0.7rem; }
@@ -396,6 +393,7 @@ footer a { color: #aaa; }
   display: flex;
   gap: 0.3rem;
   margin-left: 2rem;
+  flex-shrink: 0;
 }
 .lang-switch button {
   background: transparent;
@@ -410,8 +408,12 @@ footer a { color: #aaa; }
 .lang-switch button:hover { border-color: #aaa; color: #e8e8e8; }
 .lang-switch button.active { border-color: #e8e8e8; color: #e8e8e8; }
 @media (max-width: 600px) {
-  .lang-switch { margin-left: 1rem; }
+  .lang-switch { margin-left: 0.8rem; }
   .lang-switch button { font-size: 10px; padding: 0.2rem 0.3rem; }
+}
+@media (max-width: 400px) {
+  .lang-switch { margin-left: 0.5rem; }
+  .lang-switch button { font-size: 9px; padding: 0.15rem 0.25rem; }
 }
 
 [lang="ja"] [data-en], [lang="en"] [data-ja] { display: none; }
